@@ -13,13 +13,14 @@ from functools import partial
 # Config
 # site = 'CLN'
 # lat, lon, elev = 40.5763, -111.6383, 2945
+#start, end = 1999, 2019
 
-site = 'SNQ'
-lat, lon, elev = 47.3923, -121.4001, 921
+lat, lon, start, end = sys.argv[1:]
+lat, lon = float(lat), float(lon)
+start, end = int(start), int(end)
 
-# Fixed to the length of ERA5 data cached locally
-# Shorted from 1979 to start date of dataset as needed
-start, end = 1979, 2019
+print('Creating ERA5 Profile: {}, {}, {}, {}'.format(
+    lat, lon, start, end))
 
 def mkdir_p(path):
     import errno    
@@ -54,7 +55,7 @@ def load_year(y, v, lev):
     if init:
         ds = xr.open_dataset(flist[0])
         ds['longitude'] -= 360
-        a = abs(ds.latitude-lat)+abs(ds.longitude-(lon))
+        a = abs(ds.latitude-lat)+abs(ds.longitude-lon)
         yi, xi = np.unravel_index(a.argmin(), a.shape)
 
         del ds
@@ -67,8 +68,10 @@ def load_year(y, v, lev):
             v = v
         else:
             v = 'var_' + v
-    
-    ds = xr.open_mfdataset(flist, combine='nested', concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
+    try:
+        ds = xr.open_mfdataset(flist, combine='nested', concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
+    except:
+        ds = xr.open_mfdataset(flist, concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
     print(y, v, 'loaded')
     
     return ds
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/'
     
     # ['cc', 'ciwc', 'clwc', 'crwc', 'cswc', 'd', 'o3', 'pv'] 
-    isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
+    # isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
     
     # ['alnid', 'alnip', 'aluvd', 'aluvp', 'asn', 'chnk', 'ci',
     # 'fal', 'flsr', 'fsr', 'hcc', 'ie', 'iews', 'inss', 'ishf', 
@@ -89,8 +92,11 @@ if __name__ == '__main__':
     # 'src', 'sstk', 'stl1', 'stl2', 'stl3', 'stl4', 'swvl1', 'swvl2', 
     # 'swvl3', 'swvl4', 'tcc', 'tciw', 'tclw', 'tco3', 'tcrw', 'tcsw', 
     # 'tcw', 'tcwv', 'tsn', 'u10n', 'v10n']
-    sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
+    #sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
 
+    isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
+    sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
+    
     for k in isokeys:
 
         year_list = np.arange(start, end+1)
@@ -104,7 +110,8 @@ if __name__ == '__main__':
         data = xr.concat(_data, dim='time')
         del _data; gc.collect()
         
-        filepath = mkdir_p(profdir + '%s/'%site) + '%s_%s_%04d_%04d.nc'%(site, k.upper(), start, end)
+        filepath = mkdir_p(profdir) + 'era5prof_{}N_{}W.{}.{}_{}.nc'.format(lat, abs(lon), k.upper(), start, end)
+      
         data.to_netcdf(filepath)
         del data; gc.collect()
 
@@ -121,6 +128,7 @@ if __name__ == '__main__':
         data = xr.concat(_data, dim='time')
         del _data; gc.collect()
         
-        filepath = mkdir_p(profdir + '%s/'%site) + '%s_%s_%04d_%04d.nc'%(site, k.upper(), start, end)
+        filepath = mkdir_p(profdir) + 'era5prof_{}N_{}W.{}.{}_{}.nc'.format(lat, abs(lon), k.upper(), start, end)
+
         data.to_netcdf(filepath)
         del data; gc.collect()
