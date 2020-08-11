@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     isodir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/iso/'
     sfcdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/sfc/'
-    profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/'
+    profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/disagg/'
     
     # ['cc', 'ciwc', 'clwc', 'crwc', 'cswc', 'd', 'o3', 'pv'] 
     # isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
