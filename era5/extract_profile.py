@@ -10,11 +10,6 @@ from subprocess import run, PIPE
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
-# Config
-# site = 'CLN'
-# lat, lon, elev = 40.5763, -111.6383, 2945
-#start, end = 1999, 2019
-
 lat, lon, start, end = sys.argv[1:]
 lat, lon = float(lat), float(lon)
 start, end = int(start), int(end)

@@ -8,6 +8,7 @@ from glob import glob
 profdir = '/uufs/chpc.utah.edu/common/home/u1070830/mewessler/era5/profiles/'
 
 lat, lon = argv[1:]
+lat, lon = float(lat), float(lon)
 
 flist = glob(profdir + 'disagg/' '*%s*%s*.nc'%(lat, abs(lon)))
 
