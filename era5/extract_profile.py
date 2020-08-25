@@ -33,43 +33,49 @@ def mkdir_p(path):
 
 def load_year(y, v, lev):
     
-    print('working', y, v)
-    init = True
-        
-    flist = []
-    ddir = isodir if lev == 'iso' else sfcdir
-    dirs = np.array(glob(ddir + '*%s*'%y))
-    dirs = dirs[np.argsort(dirs)]
-
-    for mdir in dirs:
-        flist.extend(glob(mdir + '/*_%s.*.nc'%v))
-
-    flist = np.array(flist)
-    flist = flist[np.argsort(flist)]
-
-    if init:
-        ds = xr.open_dataset(flist[0])
-        ds['longitude'] -= 360
-        a = abs(ds.latitude-lat)+abs(ds.longitude-lon)
-        yi, xi = np.unravel_index(a.argmin(), a.shape)
-
-        del ds
-        init = False
-
-    if lev == 'sfc':
-        try:
-            int(v[0])
-        except:
-            v = v
-        else:
-            v = 'var_' + v
     try:
-        ds = xr.open_mfdataset(flist, combine='nested', concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
-    except:
-        ds = xr.open_mfdataset(flist, concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
-    print(y, v, 'loaded')
+        print('working', y, v)
+        init = True
+
+        flist = []
+        ddir = isodir if lev == 'iso' else sfcdir
+        dirs = np.array(glob(ddir + '*%s*'%y))
+        dirs = dirs[np.argsort(dirs)]
+
+        for mdir in dirs:
+            flist.extend(glob(mdir + '/*_%s.*.nc'%v))
+
+        flist = np.array(flist)
+        flist = flist[np.argsort(flist)]
+
+        if init:
+            ds = xr.open_dataset(flist[0])
+            ds['longitude'] -= 360
+            a = abs(ds.latitude-lat)+abs(ds.longitude-lon)
+            yi, xi = np.unravel_index(a.argmin(), a.shape)
+
+            del ds
+            init = False
+
+        if lev == 'sfc':
+            try:
+                int(v[0])
+            except:
+                v = v
+            else:
+                v = 'var_' + v
+        try:
+            ds = xr.open_mfdataset(flist, combine='nested', concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
+        except:
+            ds = xr.open_mfdataset(flist, concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
+        print(y, v, 'loaded')
     
-    return ds
+    except:
+        print(y, v, 'failed')
+        return None
+    
+    else:
+        return ds
 
 if __name__ == '__main__':
 
@@ -102,6 +108,7 @@ if __name__ == '__main__':
         p.close()
         p.join()
 
+        _data = [d for d in _data if d is not None]
         data = xr.concat(_data, dim='time')
         del _data; gc.collect()
         
@@ -120,6 +127,7 @@ if __name__ == '__main__':
         p.close()
         p.join()
 
+        _data = [d for d in _data if d is not None]
         data = xr.concat(_data, dim='time')
         del _data; gc.collect()
         
