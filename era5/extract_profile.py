@@ -85,7 +85,7 @@ if __name__ == '__main__':
     isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
     sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
 
-    sample = xr.open_dataset('./era5_iso_sample.nc')
+    sample = xr.open_dataset('./era5_sample.nc')
     a = abs(sample['latitude']-lat)+abs(sample['longitude']-360-lon)
     yi, xi = np.unravel_index(a.argmin(), a.shape)
 
