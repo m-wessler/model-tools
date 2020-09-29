@@ -7,15 +7,14 @@ import xarray as xr
 
 from subprocess import run, PIPE
 
-from multiprocessing import Pool, cpu_count
+from multiprocessing import get_context, Pool, cpu_count
 from functools import partial
 
-lat, lon, start, end = sys.argv[1:]
-lat, lon = float(lat), float(lon)
-start, end = int(start), int(end)
+os.environ['OMP_NUM_THREADS'] = '1'
 
-print('Creating ERA5 Profile: {}, {}, {}, {}'.format(
-    lat, lon, start, end))
+isodir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/iso/'
+sfcdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/sfc/'
+profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/disagg/'
 
 def mkdir_p(path):
     import errno    
@@ -31,107 +30,94 @@ def mkdir_p(path):
     
     return path
 
-def load_year(y, v, lev):
+def get_year(year, key, levelset, xi, yi):
     
-    try:
-        print('working', y, v)
-        init = True
+    print('Working on: %s %04d'%(key, year))
+        
+    year_data = []
+    for month in np.arange(1, 12+1):
+        
+        datadir = isodir if levelset == 'iso' else sfcdir
+        date_dir = datadir + '%04d%02d'%(year, month)
 
-        flist = []
-        ddir = isodir if lev == 'iso' else sfcdir
-        dirs = np.array(glob(ddir + '*%s*'%y))
-        dirs = dirs[np.argsort(dirs)]
-
-        for mdir in dirs:
-            flist.extend(glob(mdir + '/*_%s.*.nc'%v))
-
-        flist = np.array(flist)
-        flist = flist[np.argsort(flist)]
-
-        if init:
-            ds = xr.open_dataset(flist[0])
-            ds['longitude'] -= 360
-            a = abs(ds.latitude-lat)+abs(ds.longitude-lon)
-            yi, xi = np.unravel_index(a.argmin(), a.shape)
-
-            del ds
-            init = False
-
-        if lev == 'sfc':
-            try:
-                int(v[0])
-            except:
-                v = v
-            else:
-                v = 'var_' + v
+        flist = sorted(glob(date_dir + '/*_%s.*'%key))
+        
         try:
-            ds = xr.open_mfdataset(flist, combine='nested', concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
+            month_data = xr.open_mfdataset(flist, concat_dim='time', drop_variables=['utc_date'], parallel=True,
+                                      decode_cf=True, decode_times=True, decode_coords=False,
+                                     ).isel(latitude=yi, longitude=xi).drop(['latitude', 'longitude'])
         except:
-            ds = xr.open_mfdataset(flist, concat_dim='time')[v.upper()].isel(longitude=xi, latitude=yi).load()  
-        print(y, v, 'loaded')
-    
-    except:
-        print(y, v, 'failed')
-        return None
-    
-    else:
-        return ds
+            print('Failed: %04d %02d'%(year, month))
+        
+        else:            
+            if levelset == 'iso':
+                month_data = month_data.chunk({'time':month_data[key.upper()].shape[0]*1, 
+                                 'level':month_data[key.upper()].shape[1]*1}).load()
+            else:
+                try:
+                    int(key[0])
+                except:
+                    month_data = month_data.chunk({'time':month_data[key.upper()].shape[0]*1,}).load()
+                else:
+                    month_data = month_data.chunk({'time':month_data['VAR_' + key.upper()].shape[0]*1,}).load()
+                    
+            month_data.attrs = {}
+            year_data.append(month_data)
 
+    try:
+        year_data = xr.concat(year_data, dim='time')
+        year_data = year_data#.chunk({'time':year_data[key.upper()].shape[0],
+                             #   'level':year_data[key.upper()].shape[1]})
+    except:
+        return None
+    else:
+        return year_data#.load()
+    
 if __name__ == '__main__':
 
-    isodir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/iso/'
-    sfcdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/sfc/'
-    profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/disagg/'
-    
-    # ['cc', 'ciwc', 'clwc', 'crwc', 'cswc', 'd', 'o3', 'pv'] 
-    # isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
-    
-    # ['alnid', 'alnip', 'aluvd', 'aluvp', 'asn', 'chnk', 'ci',
-    # 'fal', 'flsr', 'fsr', 'hcc', 'ie', 'iews', 'inss', 'ishf', 
-    # 'istl1', 'istl2', 'istl3', 'istl4', 'laihv', 'lailv', 'lblt', 
-    # 'lcc', 'licd', 'lict', 'lshf', 'ltlt', 'mcc', 'rsn', 'sd', 'skt', 
-    # 'src', 'sstk', 'stl1', 'stl2', 'stl3', 'stl4', 'swvl1', 'swvl2', 
-    # 'swvl3', 'swvl4', 'tcc', 'tciw', 'tclw', 'tco3', 'tcrw', 'tcsw', 
-    # 'tcw', 'tcwv', 'tsn', 'u10n', 'v10n']
-    #sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
+    lat, lon, start, end = 40.50, -111.50, 1980, 2020 #sys.argv[1:]
+    lat, lon = float(lat), float(lon)
+    start, end = int(start), int(end)
+
+    print('Creating ERA5 Profile: {}, {}, {}, {}'.format(
+        lat, lon, start, end))
 
     isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
     sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
+
+    sample = xr.open_dataset('./era5_iso_sample.nc')
+    a = abs(sample['latitude']-lat)+abs(sample['longitude']-360-lon)
+    yi, xi = np.unravel_index(a.argmin(), a.shape)
+
+    lat = sample.isel(latitude=yi, longitude=xi)['latitude']
+    lon = sample.isel(latitude=yi, longitude=xi)['longitude'] - 360
+    print('ERA5 profile at gridpoint: %.2f, %.2f'%(lat, lon))
     
-    for k in isokeys:
-
-        year_list = np.arange(start, end+1)
-        load_year_mp = partial(load_year, v=k, lev='iso')
+    for key in np.append(isokeys, sfckeys):
         
-        p = Pool(len(year_list))
-        _data = p.map(load_year_mp, year_list, chunksize=1)
-        p.close()
-        p.join()
-
-        _data = [d for d in _data if d is not None]
-        data = xr.concat(_data, dim='time')
-        del _data; gc.collect()
-        
-        filepath = mkdir_p(profdir) + 'era5prof_{}N_{}W.{}.{}_{}.nc'.format(lat, abs(lon), k.upper(), start, end)
-      
-        data.to_netcdf(filepath)
-        del data; gc.collect()
-
-    for k in sfckeys:
+        filepath = mkdir_p(profdir) + 'era5prof_{:.2f}N_{:.2f}W.{:s}.{:04d}_{:04d}.nc'.format(
+            lat.values, abs(lon.values), key.upper(), start, end)
     
-        year_list = np.arange(start, end+1)
-        load_year_mp = partial(load_year, v=k, lev='sfc')
-        
-        p = Pool(len(year_list))
-        _data = p.map(load_year_mp, year_list, chunksize=1)
-        p.close()
-        p.join()
+        if os.path.isfile(filepath):
+            print(filepath, 'exists, skipping')
+            pass
+        else:
+            levelset = 'iso' if key in isokeys else 'sfc'
+            mpfunc = partial(get_year, key=key, levelset=levelset, xi=xi, yi=yi)
 
-        _data = [d for d in _data if d is not None]
-        data = xr.concat(_data, dim='time')
-        del _data; gc.collect()
-        
-        filepath = mkdir_p(profdir) + 'era5prof_{}N_{}W.{}.{}_{}.nc'.format(lat, abs(lon), k.upper(), start, end)
+            with get_context('forkserver').Pool(len(np.arange(start, end+1))) as p: #start, end+1)))
+                result = p.map(mpfunc, np.arange(start, end+1), chunksize=1)
+                p.close()
+                p.join()
 
-        data.to_netcdf(filepath)
-        del data; gc.collect()
+            result = [r for r in result if r is not None]
+            result = xr.concat(result, dim='time')
+
+            result.to_netcdf(filepath, engine='h5netcdf')
+            print('Saved: ', filepath)
+
+            del result
+            gc.collect()
+
+    
+

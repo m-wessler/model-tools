@@ -16,10 +16,10 @@ iso, sfc = [], []
 for f in flist:
     d = xr.open_dataset(f)
     if 'level' in list(d.dims):
-        iso.append(d.to_dataframe().drop(columns=['latitude', 'longitude']
+        iso.append(d.to_dataframe(#).drop(columns=['latitude', 'longitude']
                     ).reset_index().set_index(['time', 'level']).sort_index())
     else:
-        sfc.append(d.to_dataframe().drop(columns=['latitude', 'longitude']))
+        sfc.append(d.to_dataframe())#.drop(columns=['latitude', 'longitude']))
 
 isomerge = None
 for i in range(1, len(iso)):
