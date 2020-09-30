@@ -86,5 +86,5 @@ if __name__ == '__main__':
             
             print('check: ', len(flist), len(flist_check))
             
-            #if len(flist_check) == len(flist):
-            #    [os.remove(f) for f in flist]
+            if len(flist_check) == len(flist):
+                [os.remove(f) for f in flist]
