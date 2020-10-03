@@ -2,7 +2,7 @@
 
 #module load anaconda/2018.12
 source activate downscaled_slr
-echo which python
+echo $(which python)
 
 scriptdir='/uufs/chpc.utah.edu/common/home/u1070830/code/model-tools/era5'
 lat=$1

@@ -5,6 +5,7 @@ import pandas as pd
 from sys import argv
 from glob import glob
 
+scriptdir = '/uufs/chpc.utah.edu/common/home/u1070830/code/model-tools/era5/'
 profdir = '/uufs/chpc.utah.edu/common/home/u1070830/mewessler/era5/profiles/'
 
 lat, lon = argv[1:]
@@ -39,6 +40,7 @@ for i in range(1, len(sfc)):
         sfcmerge = sfcmerge.merge(sfc[i], on=['time'])
     else:
         sfcmerge = sfc[i-1].merge(sfc[i], on=['time'])  
+
 sfcmerge = sfcmerge[~sfcmerge.index.duplicated()]
 
 sfcmerge = sfcmerge.rename(
@@ -47,7 +49,7 @@ sfcmerge = sfcmerge.rename(
 
 merge = xr.merge([isomerge.to_xarray(), sfcmerge.to_xarray()])
 
-savestr = 'era5prof_%sN_%sW.nc'%(lat, abs(lon))
+savestr = 'era5prof_%.2fN_%.2fW.nc'%(lat, abs(lon))
 print('Saving: %s'%savestr)
 
 merge.to_netcdf(profdir + savestr)

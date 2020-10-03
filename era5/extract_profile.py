@@ -15,6 +15,7 @@ os.environ['OMP_NUM_THREADS'] = '1'
 isodir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/iso/'
 sfcdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/sfc/'
 profdir = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/era5/profiles/disagg/'
+scriptdir = '/uufs/chpc.utah.edu/common/home/u1070830/code/model-tools/era5/'
 
 def mkdir_p(path):
     import errno    
@@ -75,7 +76,7 @@ def get_year(year, key, levelset, xi, yi):
     
 if __name__ == '__main__':
 
-    lat, lon, start, end = 40.50, -111.50, 1980, 2020 #sys.argv[1:]
+    lat, lon, start, end = sys.argv[1:]
     lat, lon = float(lat), float(lon)
     start, end = int(start), int(end)
 
@@ -85,7 +86,7 @@ if __name__ == '__main__':
     isokeys = ['q', 't', 'u', 'v', 'vo', 'w', 'z', 'r']
     sfckeys = ['100u', '100v', '10u', '10v', '2d', '2t', 'blh', 'cape', 'msl', 'sp']
 
-    sample = xr.open_dataset('./era5_sample.nc')
+    sample = xr.open_dataset(scriptdir + 'era5_sample.nc')
     a = abs(sample['latitude']-lat)+abs(sample['longitude']-360-lon)
     yi, xi = np.unravel_index(a.argmin(), a.shape)
 
