@@ -45,7 +45,7 @@ def get_year(year, key, levelset, xi, yi):
         
         try:
             month_data = xr.open_mfdataset(flist, concat_dim='time', drop_variables=['utc_date'], parallel=True,
-                                      decode_cf=True, decode_times=True, decode_coords=False,
+                                      decode_cf=True, decode_times=True, decode_coords=False, combine='nested',
                                      ).isel(latitude=yi, longitude=xi).drop(['latitude', 'longitude'])
         except:
             print('Failed: %04d %02d'%(year, month))
