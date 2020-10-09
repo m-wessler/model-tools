@@ -106,7 +106,7 @@ if __name__ == '__main__':
             levelset = 'iso' if key in isokeys else 'sfc'
             mpfunc = partial(get_year, key=key, levelset=levelset, xi=xi, yi=yi)
 
-            with get_context('forkserver').Pool(len(np.arange(start, end+1))) as p: #start, end+1)))
+            with get_context('fork').Pool(len(np.arange(start, end+1))) as p: #start, end+1)))
                 result = p.map(mpfunc, np.arange(start, end+1), chunksize=1)
                 p.close()
                 p.join()

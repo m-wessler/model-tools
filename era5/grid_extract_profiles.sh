@@ -1,18 +1,14 @@
 #!/bin/bash
-
-#module load anaconda/2018.12
-source activate downscaled_slr
-echo which python
-
-scriptdir='/uufs/chpc.utah.edu/common/home/u1070830/code/model-tools/era5'
+conda activate xlab
+alias python='/uufs/chpc.utah.edu/common/home/u1070830/anaconda3/envs/xlab/bin/python'
 
 sy=1980
 ey=2020
 
 nlat=30
-xlat=30
+xlat=50
 nlon=-128
-xlon=-127.75
+xlon=-100
 
 dlat=0.25
 dlon=0.25
