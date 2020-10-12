@@ -120,5 +120,4 @@ if __name__ == '__main__':
             del result
             gc.collect()
 
-    
-
+    exit()

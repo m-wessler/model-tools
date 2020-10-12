@@ -53,3 +53,5 @@ savestr = 'era5prof_%.2fN_%.2fW.nc'%(lat, abs(lon))
 print('Saving: %s'%savestr)
 
 merge.to_netcdf(profdir + savestr)
+
+exit()
