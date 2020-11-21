@@ -25,7 +25,7 @@ horel_archive = '/uufs/chpc.utah.edu/common/home/horel-group/archive/'
 local_archive = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/archive/'
 
 # Later set up to run on 16th/1st of the month on cron!
-start = datetime.now() - timedelta(days=11)
+start = datetime.now() - timedelta(days=22)
 start = datetime(start.year, start.month, start.day, 0, 0)
 
 end = datetime.now() - timedelta(days=1)
