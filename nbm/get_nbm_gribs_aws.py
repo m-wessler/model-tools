@@ -138,12 +138,15 @@ os.makedirs(tmp, exist_ok=True)
 # end_3p2 = datetime(2020, 9, 29, 1, 0)
 # date_range_3p2 = pd.date_range(start_3p2, end_3p2, freq='6H')
 
-start_4p0 = datetime(2020, 10, 21, 12, 0)
-end_4p0 = datetime(2020, 10, 27, 0) #datetime.now() - timedelta(hours=3)
+start_4p0 = datetime(2020, 11, 12, 0, 0)
+end_4p0 = datetime(2020, 12, 3, 12) #datetime.now() - timedelta(hours=3)
 date_range_4p0 = pd.date_range(start_4p0, end_4p0, freq='6H')
 
 # date_range = pd.to_datetime(np.append(date_range_3p2, date_range_4p0))
 date_range = date_range_4p0
+
+print(date_range)
+input('Date range ok? Press ENTER or Ctrl+C to exit')
 
 obj_list_stacked = []
 for init in date_range:
