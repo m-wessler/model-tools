@@ -25,11 +25,13 @@ horel_archive = '/uufs/chpc.utah.edu/common/home/horel-group/archive/'
 local_archive = '/uufs/chpc.utah.edu/common/home/steenburgh-group10/mewessler/archive/'
 
 # Later set up to run on 16th/1st of the month on cron!
-start = datetime.now() - timedelta(days=22)
-start = datetime(start.year, start.month, start.day, 0, 0)
+#start = datetime.now() - timedelta(days=22)
+#start = datetime(start.year, start.month, start.day, 0, 0)
+start = datetime(2021, 1, 13, 18, 0)
 
-end = datetime.now() - timedelta(days=1)
-end = datetime(end.year, end.month, end.day, 0, 0)
+#end = datetime.now() - timedelta(days=1)
+#end = datetime(end.year, end.month, end.day, 0, 0)
+end = datetime(2021, 1, 27, 0, 0)
 
 def tar_archive(init, model):
     

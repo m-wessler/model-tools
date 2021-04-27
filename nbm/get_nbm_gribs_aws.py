@@ -1,4 +1,4 @@
-import os
+import os, sys
 import gzip
 import pygrib
 import boto3
@@ -72,7 +72,7 @@ def s3_to_temp(obj, compress=False):
             subset_grib_variables(subset, compress=compress)
         
     except:
-        print('failed: obj')
+        print('failed: %s'%obj)
         return None
 
     else:
@@ -133,25 +133,21 @@ def compress_grib(full_file):
 bucket = 'noaa-nbm-grib2-pds'
 os.makedirs(tmp, exist_ok=True)
 
-# Determine the start of the qmd files and append two pd.date_range() sets
-# start_3p2 = datetime(2020, 5, 18, 1, 0)
-# end_3p2 = datetime(2020, 9, 29, 1, 0)
-# date_range_3p2 = pd.date_range(start_3p2, end_3p2, freq='6H')
+# start_4p0 = datetime(2021, 4, 15, 12, 0)
+# end_4p0 = datetime(2021, 4, 15, 18, 0) #datetime.now() - timedelta(hours=3)
 
-start_4p0 = datetime(2020, 11, 12, 0, 0)
-end_4p0 = datetime(2020, 12, 3, 12) #datetime.now() - timedelta(hours=3)
+start_4p0 = datetime.strptime(sys.argv[1], '%Y%m%d%H%M')
+end_4p0 = datetime.strptime(sys.argv[2], '%Y%m%d%H%M')#+timedelta(hours=6)
+
 date_range_4p0 = pd.date_range(start_4p0, end_4p0, freq='6H')
-
-# date_range = pd.to_datetime(np.append(date_range_3p2, date_range_4p0))
 date_range = date_range_4p0
 
-print(date_range)
-input('Date range ok? Press ENTER or Ctrl+C to exit')
+# input('Date range ok? Press ENTER or Ctrl+C to exit')
 
 obj_list_stacked = []
 for init in date_range:
 
-    print('\rBuilding file list: %s'%init, end='')
+#     print('\rBuilding file list: %s'%init, end='')
     
     try:
         # NBM 4.0, QMD isolated
